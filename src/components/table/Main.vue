@@ -1,9 +1,15 @@
 <template>
   <v-data-table
+    @input="handleSelect"
     :headers="tableData.headers"
-    :items="$store.getters[tableData.getter]"
-    sort-by="calories"
+    :items="$store.getters[tableData.getters.item]"
     :search="search"
+    :single-expand="true"
+    :expanded.sync="expanded"
+    :single-select="true"
+    item-key="id"
+    :show-expand="tableData.expand"
+    :show-select="tableData.select"
     class="elevation-1"
   >
     <template v-slot:top>
@@ -12,10 +18,16 @@
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
         <v-card-title>
+          <DatePicker
+            v-if="tableData.search.type === 'date'"
+            :getter="tableData.getters.search"
+            :label="tableData.search.label"
+          />
           <v-text-field
+            v-else
             v-model="search"
             append-icon="mdi-magnify"
-            label="Поиск"
+            :label="tableData.search.label"
             single-line
             hide-details
           ></v-text-field>
@@ -78,6 +90,9 @@
       <v-icon small class="mr-2" @click="editItem(item)"> mdi-pencil </v-icon>
       <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
     </template>
+    <template v-slot:expanded-item="{ headers, item }">
+      <td :colspan="headers.length">More info about {{ item }}</td>
+    </template>
     <!-- <template v-slot:no-data>
       <v-btn color="primary" @click="initialize"> Сбросить </v-btn>
     </template> -->
@@ -86,21 +101,29 @@
 
 <script>
 import ModalField from "./ModalField.vue";
+import DatePicker from "./DatePicker.vue";
 export default {
   components: {
     ModalField,
+    DatePicker,
   },
   props: ["tableData"],
   data: () => ({
+    selected: [],
+    expanded: [],
+    date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+      .toISOString()
+      .substr(0, 10),
+    menu: false,
     search: "",
     dialog: false,
     dialogDelete: false,
-    editedIndex: -1
+    editedIndex: 1,
   }),
 
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "Добавить пункт" : "Изменить пункт";
+      return this.editedIndex === 1 ? "Добавить пункт" : "Изменить пункт";
     },
   },
 
@@ -113,48 +136,69 @@ export default {
     },
   },
 
-  created() {
-  },
+  created() {},
 
   methods: {
+    handleSelect(val) {
+      console.log(this.tableData.actions.fetch)
+      this.$store.dispatch(
+        this.tableData.actions.fetch,
+        val.length ? val[0].AcctNum : ""
+      );
+    },
     editItem(item) {
-      this.editedIndex = this.desserts.indexOf(item);
+      this.editedIndex = -1;
       this.tableData.editedItem = Object.assign({}, item);
       this.dialog = true;
     },
 
     deleteItem(item) {
-      this.editedIndex = this.desserts.indexOf(item);
       this.tableData.editedItem = Object.assign({}, item);
       this.dialogDelete = true;
     },
 
     deleteItemConfirm() {
-      this.desserts.splice(this.editedIndex, 1);
+      this.$store.dispatch(
+        this.tableData.actions.delete,
+        this.tableData.editedItem
+      );
       this.closeDelete();
     },
 
     close() {
       this.dialog = false;
       this.$nextTick(() => {
-        this.tableData.editedItem = Object.assign({}, this.tableData.defaultItem);
-        this.editedIndex = -1;
+        this.tableData.editedItem = Object.assign(
+          {},
+          this.tableData.defaultItem
+        );
+        this.editedIndex = 1;
       });
     },
 
     closeDelete() {
       this.dialogDelete = false;
       this.$nextTick(() => {
-        this.tableData.editedItem = Object.assign({}, this.tableData.defaultItem);
-        this.editedIndex = -1;
+        this.tableData.editedItem = Object.assign(
+          {},
+          this.tableData.defaultItem
+        );
+        this.editedIndex = 1;
       });
     },
 
     save() {
       if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.tableData.editedItem);
+        this.$store.dispatch(this.tableData.actions.post, {
+          ...this.tableData.editedItem,
+          id: Date.now(),
+        });
       } else {
-        this.desserts.push(this.tableData.editedItem);
+        this.$store.dispatch(this.tableData.actions.put, {
+          ...this.tableData.editedItem,
+          [this.tableData.intField]:
+            +this.tableData.editedItem[this.tableData.intField],
+        });
       }
       this.close();
     },
