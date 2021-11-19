@@ -50,6 +50,7 @@
                     v-for="{ text, value } in tableData.headers"
                     :key="text"
                     :label="text"
+                    :classN="tableData.fieldClass"
                     v-model="tableData.editedItem[value]"
                   />
                 </v-row>
@@ -140,10 +141,14 @@ export default {
 
   methods: {
     handleSelect(val) {
-      console.log(this.tableData.actions.fetch)
+      const field = this.tableData.actions.fetchField;
       this.$store.dispatch(
         this.tableData.actions.fetch,
-        val.length ? val[0].AcctNum : ""
+        val.length
+          ? Array.isArray(field)
+            ? field.map((f) => val[0][f])
+            : val[0][field]
+          : ""
       );
     },
     editItem(item) {
@@ -188,17 +193,22 @@ export default {
     },
 
     save() {
+      let tempObj = {};
+      tempObj = this.tableData.intField
+        ? {
+            ...this.tableData.editedItem,
+            [this.tableData.intField]:
+              +this.tableData.editedItem[this.tableData.intField],
+          }
+        : this.tableData.editedItem;
+
       if (this.editedIndex > -1) {
         this.$store.dispatch(this.tableData.actions.post, {
-          ...this.tableData.editedItem,
+          ...tempObj,
           id: Date.now(),
         });
       } else {
-        this.$store.dispatch(this.tableData.actions.put, {
-          ...this.tableData.editedItem,
-          [this.tableData.intField]:
-            +this.tableData.editedItem[this.tableData.intField],
-        });
+        this.$store.dispatch(this.tableData.actions.put, tempObj);
       }
       this.close();
     },

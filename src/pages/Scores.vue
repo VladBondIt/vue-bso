@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Table v-for="item in data" :tableData="item" :key="item.title" />
+    <Table v-for="item in tableData" :tableData="item" :key="item.title" />
   </div>
 </template>
 
@@ -12,8 +12,8 @@ export default {
   },
   data() {
     return {
-      data: {
-        scoreTableData: {
+      tableData: {
+        scoreData: {
           title: "Счета с остатками на дату",
           headers: [
             {
@@ -46,6 +46,7 @@ export default {
           },
           actions: {
             fetch: "fetchTransactions",
+            fetchField: "AcctNum",
             delete: "deleteScoreItems",
             post: "postScoreItems",
             put: "putScoreItems",
@@ -54,7 +55,7 @@ export default {
           expand: true,
           select: true,
         },
-        transactTableData: {
+        transactionsData: {
           title: "Проводки по счету",
           headers: [
             {

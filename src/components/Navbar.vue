@@ -34,7 +34,11 @@
 </template>
 
 <script>
-export default {};
+export default {
+  mounted(){
+    this.$router.push('/scores')
+  },
+};
 </script>
 
 <style scoped>

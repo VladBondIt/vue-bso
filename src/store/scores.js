@@ -46,7 +46,6 @@ export default {
     filterTransactions(state, payload) {
       state.transactions = state.transactions.filter((v) => v.id !== payload)
     },
-
   },
   actions: {
     fetchScoreItems(context, val = false) {

@@ -1,12 +1,16 @@
 <template>
-  <v-col v-if="checkLabel" cols="12" sm="6" md="4">
-    <v-text-field @input="handleInput" :value="inp" :label="label"></v-text-field>
+  <v-col :class="makeClass" v-if="checkLabel" >
+    <v-text-field
+      @input="handleInput"
+      :value="inp"
+      :label="label"
+    ></v-text-field>
   </v-col>
 </template>
 
 <script>
 export default {
-  props: ["value", "label"],
+  props: ["value", "label", "classN"],
   data() {
     return {
       inp: this.value,
@@ -19,8 +23,11 @@ export default {
     },
   },
   computed: {
+    makeClass() {
+      return this.classN ? "col-12" : "col-12 col-md-6 col-sm-4";
+    },
     checkLabel() {
-      return this.label !== 'Действия' && this.label;
+      return this.label !== "Действия" && this.label;
     },
   },
   watch: {
