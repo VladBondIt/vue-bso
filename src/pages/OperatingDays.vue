@@ -36,7 +36,7 @@ export default {
           },
           search: {
             type: "text",
-            label: "Выберите дату опер дня",
+            label: "Введите дату опер дня",
           },
           actions: {
             fetch: "fetchTransactions",
